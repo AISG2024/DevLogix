@@ -29,13 +29,37 @@ export const loginUser = async (username, password) => {
   }
 
   const data = await response.json();
+
   localStorage.setItem("accessToken", data.accessToken);
   localStorage.setItem("refreshToken", data.refreshToken);
+  
   return data;
+};
+
+export const logoutUser = async () => {
+  const refreshToken = localStorage.getItem("refreshToken");
+
+  const response = await fetch(`${API_URL}/logout`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${refreshToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Logout failed");
+  }
+
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+
+  return await response.text();
 };
 
 export const refreshToken = async () => {
   const refreshToken = localStorage.getItem("refreshToken");
+
   const response = await fetch(`${API_URL}/refresh-token`, {
     method: "POST",
     headers: {
@@ -49,7 +73,9 @@ export const refreshToken = async () => {
   }
 
   const data = await response.json();
+  
   localStorage.setItem("accessToken", data.accessToken);
+
   return data.accessToken;
 };
 
@@ -74,4 +100,14 @@ export const authenticatedRequest = async (endpoint, method = "GET") => {
   }
 
   return await response.json();
+};
+
+export const decodeToken = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload;
+  } catch (e) {
+    console.error("Invalid token", e);
+    return null;
+  }
 };

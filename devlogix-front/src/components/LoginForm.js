@@ -1,20 +1,32 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/AuthService";
 
-const LoginForm = () => {
+const LoginForm = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
-      const response = await loginUser(username, password);
-      setMessage(`Login successful! Token: ${response.accessToken}`);
+      await loginUser(username, password); 
+      setMessage("Login successful!");
+      onLoginSuccess(); 
+      navigate("/");
     } catch (error) {
       setMessage(error.message);
+    } finally {
+      setIsSubmitting(false); 
     }
   };
+
+  if (isSubmitting) {
+    return <p>Logging in...</p>;
+  }
 
   return (
     <div className="card p-4 shadow-sm">
@@ -38,7 +50,9 @@ const LoginForm = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <button type="submit" className="btn btn-secondary w-100">Login</button>
+        <button type="submit" className="btn btn-primary w-100" disabled={isSubmitting}>
+          {isSubmitting ? "Logging in..." : "Login"}
+        </button>
       </form>
       {message && <div className="alert alert-info mt-3">{message}</div>}
     </div>
