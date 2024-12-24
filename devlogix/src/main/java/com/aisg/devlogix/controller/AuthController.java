@@ -84,6 +84,16 @@ public class AuthController {
         return response;
     }
 
+    @PostMapping("/logout")
+    public String logout(@RequestHeader("Authorization") String refreshToken) {
+        
+        if (refreshToken.startsWith("Bearer ")) {
+            refreshToken = refreshToken.substring(7);
+        }
+        
+        return "Logged out successfully";
+    }
+
     @GetMapping("/test")
     public Map<String, String> test() {
         Map<String, String> response = new HashMap<>();
