@@ -43,19 +43,41 @@ public class JwtUtil {
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         
-        return createToken(claims, userDetails.getUsername());
+        return createToken(claims, userDetails.getUsername(), 1000 * 60 * 60 * 10);
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-            .signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
+    public String generateRefreshToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        
+        claims.put("type", "refresh");
+
+        return createToken(claims, userDetails.getUsername(), 1000 * 60 * 60 * 24 * 7);
+    }
+
+    private String createToken(Map<String, Object> claims, String subject, long expirationTime) {
+        return Jwts.builder()
+            .setClaims(claims)
+            .setSubject(subject)
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+            .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+            .compact();
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
 
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    public Boolean validateRefreshToken(String token) {
+        try {
+            final Claims claims = extractAllClaims(token);
+
+            return "refresh".equals(claims.get("type")) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
     
 }
