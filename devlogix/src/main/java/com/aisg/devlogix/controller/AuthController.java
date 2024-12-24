@@ -6,8 +6,13 @@ import com.aisg.devlogix.repository.UserRepository;
 import com.aisg.devlogix.service.CustomUserDetailsService;
 import com.aisg.devlogix.util.JwtUtil;
 
+import com.aisg.devlogix.exception.GlobalExceptionHandler;
+import com.aisg.devlogix.exception.UserAlreadyExistsException;
+
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.smartcardio.ResponseAPDU;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -16,6 +21,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -37,11 +43,16 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public String registerUser(@RequestBody User user) {
+    public ResponseEntity<?> registerUser(@RequestBody User user) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new UserAlreadyExistsException("Username is already taken");
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         userRepository.save(user);
 
-        return "User registered successfully";
+        return ResponseEntity.ok("User registered successfully");
     }
 
     @PostMapping("/login")
