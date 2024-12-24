@@ -1,7 +1,7 @@
 const API_URL = "http://localhost:8000/api";
 
 export const registerUser = async (username, password) => {
-  const response = await fetch(`${API_URL}/register`, {
+  const response = await fetch("http://localhost:8000/api/register", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -10,8 +10,10 @@ export const registerUser = async (username, password) => {
   });
 
   if (!response.ok) {
-    throw new Error("Registration failed");
+    const errorMessage = await response.text(); 
+    throw new Error(errorMessage);
   }
+
   return await response.text();
 };
 
