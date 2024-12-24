@@ -85,7 +85,9 @@ public class AuthController {
     }
 
     @GetMapping("/test")
-    public String test() {
-        return "Test";
+    public Map<String, String> test() {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Test");
+        return response;
     }
 }
