@@ -24,6 +24,21 @@ const Graph = () => {
   const fetchData = async () => {
     try {
       const result = await getTodayCommits();
+
+      if (!result || Object.keys(result).length === 0) {
+        setData({
+          labels: ["No Data"],
+          datasets: [
+            {
+              label: "Commits Today",
+              data: [0],
+              backgroundColor: ["rgba(200, 200, 200, 0.6)"],
+            },
+          ],
+        });
+        return;
+      }
+
       const labels = Object.keys(result);
       const values = Object.values(result);
 

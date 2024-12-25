@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -80,11 +82,19 @@ public class MattermostController {
 
         logger.info(String.format("Processed Webhook: message='%s', user='%s', channel='%s'", text, userName, channelName));
 
-        return ResponseEntity.ok("Webhook processed successfully");
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.add("Cache-Control", "no-cache");
+        headers.add("X-Accel-Buffering", "no");
+        headers.add("Connection", "keep-alive");
+
+        return ResponseEntity.ok()
+            .headers(headers)
+            .body("Webhook processed successfully");
     }
 
-    @GetMapping("/events")
-    public SseEmitter streamEvents(@RequestParam("token") String token, @RequestParam("username") String username) {
+    @GetMapping(value = "/events", produces = "text/event-stream")
+    public ResponseEntity<SseEmitter> streamEvents(@RequestParam("token") String token, @RequestParam("username") String username) {
         // if (!rateLimiterService.isRequestAllowed(username)) {
         //     throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many requests. Please try again later.");
         // }
@@ -112,19 +122,18 @@ public class MattermostController {
         emitter.onCompletion(() -> {
             logger.info("Client disconnected: " + username);
             clients.remove(username);
-            rateLimiterService.resetRequestCount(username);
         });
 
         emitter.onTimeout(() -> {
             logger.warning("Client connection timed out: " + username);
             clients.remove(username);
-            rateLimiterService.resetRequestCount(username);
         });
 
         try {
             emitter.send(SseEmitter.event()
                     .name("connect")
                     .data("Connected to server"));
+                    
             logger.info("Sent connection confirmation to client: " + username);
         } catch (IOException e) {
             logger.warning("Failed to send connection confirmation to client: " + username);
@@ -132,6 +141,12 @@ public class MattermostController {
             clients.remove(username);
         }
 
-        return emitter;
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Cache-Control", "no-cache");
+        headers.add("X-Accel-Buffering", "no");
+        headers.add("Connection", "keep-alive");
+        headers.add("Content-Type", "text/event-stream");
+
+        return new ResponseEntity<>(emitter, headers, HttpStatus.OK);
     }
 }
