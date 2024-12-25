@@ -85,9 +85,9 @@ public class MattermostController {
 
     @GetMapping("/events")
     public SseEmitter streamEvents(@RequestParam("token") String token, @RequestParam("username") String username) {
-        if (!rateLimiterService.isRequestAllowed(username)) {
-            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many requests. Please try again later.");
-        }
+        // if (!rateLimiterService.isRequestAllowed(username)) {
+        //     throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many requests. Please try again later.");
+        // }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
