@@ -1,6 +1,7 @@
 package com.aisg.devlogix.controller;
 
 import com.aisg.devlogix.service.MattermostService;
+import com.aisg.devlogix.service.RateLimiterService;
 import com.aisg.devlogix.util.JwtUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,10 @@ public class MattermostController {
 
     @Autowired
     private UserDetailsService userDetailsService;
+
+    @Autowired
+    private RateLimiterService rateLimiterService;
+
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -80,6 +85,10 @@ public class MattermostController {
 
     @GetMapping("/events")
     public SseEmitter streamEvents(@RequestParam("token") String token, @RequestParam("username") String username) {
+        if (!rateLimiterService.isRequestAllowed(username)) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many requests. Please try again later.");
+        }
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
         if (!jwtUtil.validateToken(token, userDetails)) {
@@ -103,17 +112,19 @@ public class MattermostController {
         emitter.onCompletion(() -> {
             logger.info("Client disconnected: " + username);
             clients.remove(username);
+            rateLimiterService.resetRequestCount(username);
         });
 
         emitter.onTimeout(() -> {
             logger.warning("Client connection timed out: " + username);
             clients.remove(username);
+            rateLimiterService.resetRequestCount(username);
         });
 
         try {
             emitter.send(SseEmitter.event()
-                .name("connect")
-                .data("Connected to server"));
+                    .name("connect")
+                    .data("Connected to server"));
             logger.info("Sent connection confirmation to client: " + username);
         } catch (IOException e) {
             logger.warning("Failed to send connection confirmation to client: " + username);
