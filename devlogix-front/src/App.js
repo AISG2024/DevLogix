@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-ro
 import LoginForm from "./components/LoginForm";
 import LogoutButton from "./components/LogoutButton";
 import RegisterForm from "./components/RegisterForm";
+import Home from "./components/Home";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -37,7 +38,7 @@ function App() {
             path="/"
             element={
               <h2 className="text-center">
-                {isLoggedIn ? "Welcome to the JWT Auth App!" : "Please log in or register."}
+                {isLoggedIn ? <Home /> : <Navigate to="/login" />}
               </h2>
             }
           />

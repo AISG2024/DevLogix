@@ -1,7 +1,7 @@
-const API_URL = "http://localhost:8000/api";
+const API_URL = "http://youhyeok.com:8004/api";
 
 export const registerUser = async (username, password) => {
-  const response = await fetch("http://localhost:8000/api/register", {
+  const response = await fetch(`${API_URL}/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
