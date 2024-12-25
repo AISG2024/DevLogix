@@ -10,19 +10,42 @@ const Graph = () => {
   const [error, setError] = useState("");
   const { events, error: sseError } = useSSE("/mattermost/events");
 
+  const generateColors = (count) => {
+    const colors = [];
+    for (let i = 0; i < count; i++) {
+      const r = Math.floor(Math.random() * 256);
+      const g = Math.floor(Math.random() * 256);
+      const b = Math.floor(Math.random() * 256);
+      colors.push(`rgba(${r}, ${g}, ${b}, 0.6)`);
+    }
+    return colors;
+  };
+
   const fetchData = async () => {
     try {
       const result = await getTodayCommits();
       const labels = Object.keys(result);
       const values = Object.values(result);
 
+      const combined = labels.map((label, index) => ({
+        label,
+        value: values[index],
+      }));
+
+      const sorted = combined.sort((a, b) => b.value - a.value);
+
+      const sortedLabels = sorted.map((item) => item.label);
+      const sortedValues = sorted.map((item) => item.value);
+
+      const colors = generateColors(sortedValues.length);
+
       const updatedData = {
-        labels: [...labels],
+        labels: [...sortedLabels],
         datasets: [
           {
             label: "Commits Today",
-            data: [...values],
-            backgroundColor: "rgba(75, 192, 192, 0.6)",
+            data: [...sortedValues],
+            backgroundColor: colors,
           },
         ],
       };
