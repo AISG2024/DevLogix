@@ -2,6 +2,7 @@ package com.aisg.devlogix.service;
 
 import com.aisg.devlogix.model.MattermostEntity;
 import com.aisg.devlogix.repository.MattermostRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -10,12 +11,8 @@ import java.util.regex.Pattern;
 
 @Service
 public class MattermostService {
-
-    private final MattermostRepository mattermostRepository;
-
-    public MattermostService(MattermostRepository mattermostRepository) {
-        this.mattermostRepository = mattermostRepository;
-    }
+    @Autowired
+    private MattermostRepository mattermostRepository;
 
     public void saveParsedData(String channelName, String text) {
         text = text.replaceAll("\\r?\\n", " ");
