@@ -1,5 +1,8 @@
 const API_URL = "https://enfycius.com:8008/api";
 
+export const getAccessToken = () => localStorage.getItem("accessToken");
+export const getRefreshToken = () => localStorage.getItem("refreshToken");
+
 export const registerUser = async (username, password) => {
   const response = await fetch(`${API_URL}/register`, {
     method: "POST",
@@ -32,9 +35,14 @@ export const loginUser = async (username, password) => {
 
   const data = await response.json();
 
+  if (!data.refreshToken || !data.accessToken) {
+    console.error("Missing tokens in response:", data);
+    throw new Error("Login response is missing tokens");
+  }
+
   localStorage.setItem("accessToken", data.accessToken);
   localStorage.setItem("refreshToken", data.refreshToken);
-  
+
   return data;
 };
 
@@ -49,14 +57,17 @@ export const logoutUser = async () => {
     },
   });
 
+  console.log("Server Response:", await response.text());
+
   if (!response.ok) {
+    console.error("Logout failed with status:", response.status);
     throw new Error("Logout failed");
   }
 
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
 
-  return await response.text();
+  return "Logged out successfully";
 };
 
 export const refreshToken = async () => {
