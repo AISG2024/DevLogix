@@ -40,6 +40,10 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+tasks.named('bootJar') {
+    mainClass.set('com.aisg.devlogix.DevlogixApplication')
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }
