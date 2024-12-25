@@ -1,5 +1,8 @@
 package com.aisg.devlogix.controller;
 
+import com.aisg.devlogix.service.MattermostService;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +15,9 @@ public class MattermostController {
 
     @Value("${mattermost.valid-token}")
     private String validToken;
+
+    @Autowired
+    private MattermostService mattermostService;
 
     @PostMapping(value = "/webhook", consumes = "application/json")
     public ResponseEntity<String> handleJsonWebhook(@RequestBody Map<String, Object> payload) {
@@ -26,6 +32,8 @@ public class MattermostController {
             return ResponseEntity.status(403).body("Invalid token");
         }
 
+        mattermostService.saveParsedData(channelName, text);
+        
         System.out.printf("Received message: '%s' from user: '%s' in channel: '%s'%n", text, userName, channelName);
 
         String responseMessage = String.format("Hello %s, you said: %s", userName, text);
