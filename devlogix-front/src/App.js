@@ -43,7 +43,7 @@ function App() {
   return (
     <Router>
       <div className="container mt-5">
-        <h1 className="text-center mb-4">JWT Auth App</h1>
+        <h1 className="text-center mb-4">AI Study Group 2024</h1>
         <div className="d-flex justify-content-between align-items-start mb-4">
           <div className="d-flex flex-column align-items-start">
             <Link to="/" className="btn btn-light mb-2">Home</Link>
