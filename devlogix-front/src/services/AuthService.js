@@ -1,4 +1,4 @@
-const API_URL = "http://enfycius.com:8008/api";
+const API_URL = "https://enfycius.com:8008/api";
 
 export const registerUser = async (username, password) => {
   const response = await fetch(`${API_URL}/register`, {
