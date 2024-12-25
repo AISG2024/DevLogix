@@ -1,20 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
 import { logoutUser } from "../services/AuthService";
 
-const LogoutButton = ({ onLogout }) => {
+const LogoutButton = ({ onLogout, isLoggingOut }) => {
   const handleLogout = async () => {
+    if (isLoggingOut) return;
     try {
-      const message = await logoutUser();
-      alert(message);
-      onLogout(); 
+      await onLogout();
     } catch (error) {
       alert(error.message);
     }
   };
 
   return (
-    <button onClick={handleLogout} className="btn btn-danger">
-      Logout
+    <button
+      onClick={handleLogout}
+      className="btn btn-danger"
+      disabled={isLoggingOut}
+    >
+      {isLoggingOut ? "Logging Out..." : "Logout"}
     </button>
   );
 };

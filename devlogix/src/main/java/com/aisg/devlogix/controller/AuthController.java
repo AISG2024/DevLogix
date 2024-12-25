@@ -15,6 +15,7 @@ import java.util.Map;
 import javax.smartcardio.ResponseAPDU;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -96,13 +97,19 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public String logout(@RequestHeader("Authorization") String refreshToken) {
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String refreshToken) {
         
         if (refreshToken.startsWith("Bearer ")) {
             refreshToken = refreshToken.substring(7);
         }
+
+        if (!jwtUtil.validateRefreshToken(refreshToken)) {
+            return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body("Invalid or expired refresh token");
+        }
         
-        return "Logged out successfully";
+        return ResponseEntity.ok("Logged out successfully");
     }
 
     @GetMapping("/test")
