@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class CommitStatsDTO {
+    private Long id;
     private String repositoryName;
     private String commitMessage;
     private String commitId;

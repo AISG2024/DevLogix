@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import useSSE from "../hooks/useSSE";
 import { getAllCommits } from "../services/CommitService";
 
 const CommitLogs = () => {
+  const { events, error: sseError } = useSSE("/mattermost/events");
   const [logs, setLogs] = useState([]);
-  const [error, setError] = useState("");
+  const [fetchError, setFetchError] = useState("");
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -11,14 +13,28 @@ const CommitLogs = () => {
         const data = await getAllCommits();
         setLogs(data);
       } catch (err) {
-        setError(err.message);
       }
     };
 
     fetchLogs();
   }, []);
 
-  if (error) return <p>Error: {error}</p>;
+  useEffect(() => {
+    if (events.length > 0) {
+      const fetchUpdatedLogs = async () => {
+        try {
+          const updatedData = await getAllCommits();
+          setLogs(updatedData);
+        } catch (err) {
+        }
+      };
+
+      fetchUpdatedLogs();
+    }
+  }, [events]);
+
+  if (sseError) return <p>Error with SSE: {sseError}</p>;
+  if (fetchError) return <p>Error fetching logs: {fetchError}</p>;
   if (!logs.length) return <p>Loading...</p>;
 
   return (
@@ -38,7 +54,7 @@ const CommitLogs = () => {
         </thead>
         <tbody>
           {logs.map((log, index) => (
-            <tr key={log.id}>
+            <tr key={`${log.id}-${index}`}>
               <td>{index + 1}</td>
               <td>{log.repositoryName}</td>
               <td>{log.commitId}</td>
