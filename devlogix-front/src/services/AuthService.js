@@ -1,4 +1,4 @@
-const API_URL = "https://enfycius.com:8008/api";
+export const API_URL = "https://enfycius.com:8008/api";
 
 export const getAccessToken = () => localStorage.getItem("accessToken");
 export const getRefreshToken = () => localStorage.getItem("refreshToken");
@@ -42,6 +42,7 @@ export const loginUser = async (username, password) => {
 
   localStorage.setItem("accessToken", data.accessToken);
   localStorage.setItem("refreshToken", data.refreshToken);
+  localStorage.setItem("username", username);
 
   return data;
 };
@@ -66,6 +67,7 @@ export const logoutUser = async () => {
 
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
+  localStorage.removeItem("username");
 
   return "Logged out successfully";
 };

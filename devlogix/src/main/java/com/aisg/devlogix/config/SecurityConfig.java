@@ -52,7 +52,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/register", "/api/login", "/api/logout", "/api/mattermost/webhook").permitAll() 
+                .requestMatchers("/api/register", "/api/login", "/api/logout", "/api/mattermost/webhook", "/api/mattermost/events").permitAll() 
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) 
@@ -69,13 +69,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
+        configuration.setAllowCredentials(true);
         configuration.addAllowedOriginPattern("*");
-        configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
+        configuration.addAllowedMethod("*");
+        configuration.addExposedHeader("Content-Type");
+        configuration.addExposedHeader("Cache-Control");
+        configuration.addExposedHeader("Authorization");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
         source.registerCorsConfiguration("/**", configuration);
 
         return source;

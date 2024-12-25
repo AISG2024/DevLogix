@@ -25,6 +25,7 @@ public class CommitStatsService {
 
         return entities.stream()
                 .map(entity -> new CommitStatsDTO(
+                        entity.getId(),
                         entity.getRepositoryName(),
                         entity.getCommitMessage(),
                         entity.getCommitId(),
