@@ -11,7 +11,10 @@ const CommitLogs = () => {
     const fetchLogs = async () => {
       try {
         const data = await getAllCommits();
-        setLogs(data);
+        const sortedData = data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setLogs(sortedData);
       } catch (err) {
       }
     };
