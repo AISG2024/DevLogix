@@ -3,7 +3,7 @@ import useSSE from "../hooks/useSSE";
 import { getAllCommits } from "../services/CommitService";
 
 const CommitLogs = () => {
-  const { events, error: sseError } = useSSE("/mattermost/events");
+  const { events, error: sseError } = useSSE("/mattermost/events", "mattermost");
   const [logs, setLogs] = useState([]);
   const [fetchError, setFetchError] = useState("");
 
@@ -27,11 +27,17 @@ const CommitLogs = () => {
       const fetchUpdatedLogs = async () => {
         try {
           const updatedData = await getAllCommits();
-          setLogs(updatedData);
+  
+          const sortedData = updatedData.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+  
+          setLogs(sortedData);
         } catch (err) {
+          console.error("Error fetching updated logs:", err);
         }
       };
-
+  
       fetchUpdatedLogs();
     }
   }, [events]);
