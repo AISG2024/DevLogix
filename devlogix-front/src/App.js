@@ -4,7 +4,9 @@ import LoginForm from "./components/LoginForm";
 import LogoutButton from "./components/LogoutButton";
 import RegisterForm from "./components/RegisterForm";
 import Home from "./components/Home";
-import CommitLog from "./components/CommitLogs";
+import CommitLogs from "./components/CommitLogs";
+import NotionLogs from "./components/NotionLogs";
+import NotionGraph from "./components/NotionGraph";
 import { getAccessToken, logoutUser } from "./services/AuthService";
 
 function App() {
@@ -51,6 +53,9 @@ function App() {
               <>
                 <Link to="/statistics" className="btn btn-light mb-2">Commit Statistics</Link>
                 <Link to="/logs" className="btn btn-light mb-2">Commit Log</Link>
+
+                <Link to="/notion/statistics" className="btn btn-light mb-2">Notion Statistics</Link>
+                <Link to="/notion/logs" className="btn btn-light mb-2">Notion Log</Link>
               </>
             )}
           </div>
@@ -97,7 +102,23 @@ function App() {
             path="/logs"
             element={
               isLoggedIn
-                ? <CommitLog />
+                ? <CommitLogs />
+                : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/notion/statistics"
+            element={
+              isLoggedIn
+                ? <NotionGraph />
+                : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/notion/logs"
+            element={
+              isLoggedIn
+                ? <NotionLogs />
                 : <Navigate to="/login" />
             }
           />

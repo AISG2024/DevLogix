@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import "chart.js/auto";
-import { getTodayCommits } from "../services/CommitService";
+import { getTodayNotion } from "../services/NotionService";
 import useSSE from "../hooks/useSSE";
 import "./Graph.css";
 
-const Graph = () => {
+const NotionGraph = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
-  const { events, error: sseError } = useSSE("/mattermost/events", "mattermost");
+  const { events, error: sseError } = useSSE("/notion/events", "notion");
 
   const generateColors = (count) => {
     const colors = [];
@@ -23,14 +23,14 @@ const Graph = () => {
 
   const fetchData = async () => {
     try {
-      const result = await getTodayCommits();
+      const notionStats = await getTodayNotion();
 
-      if (!result || Object.keys(result).length === 0) {
+      if (!notionStats || Object.keys(notionStats).length === 0) {
         setData({
           labels: ["No Data"],
           datasets: [
             {
-              label: "Commits Today",
+              label: "Notion Data",
               data: [0],
               backgroundColor: ["rgba(200, 200, 200, 0.6)"],
             },
@@ -39,34 +39,24 @@ const Graph = () => {
         return;
       }
 
-      const labels = Object.keys(result);
-      const values = Object.values(result);
+      const labels = Object.keys(notionStats);
+      const values = Object.values(notionStats);
 
-      const combined = labels.map((label, index) => ({
-        label,
-        value: values[index],
-      }));
+      const colors = generateColors(values.length);
 
-      const sorted = combined.sort((a, b) => b.value - a.value);
-
-      const sortedLabels = sorted.map((item) => item.label);
-      const sortedValues = sorted.map((item) => item.value);
-
-      const colors = generateColors(sortedValues.length);
-
-      const updatedData = {
-        labels: [...sortedLabels],
+      setData({
+        labels,
         datasets: [
           {
-            label: "Commits Today",
-            data: [...sortedValues],
+            label: "Entries per User",
+            data: values,
             backgroundColor: colors,
           },
         ],
-      };
-
-      setData(updatedData);
+      });
     } catch (err) {
+      console.error("Error fetching Notion data:", err);
+      setError(err.message);
     }
   };
 
@@ -76,6 +66,7 @@ const Graph = () => {
 
   useEffect(() => {
     if (events.length > 0) {
+      console.log("SSE events received, updating data...");
       fetchData();
     }
   }, [events]);
@@ -93,7 +84,7 @@ const Graph = () => {
           maintainAspectRatio: false,
           plugins: {
             legend: { position: "top" },
-            title: { display: true, text: "Today's Commits by User" },
+            title: { display: true, text: "Notion Entries by User" },
           },
         }}
       />
@@ -101,4 +92,4 @@ const Graph = () => {
   );
 };
 
-export default Graph;
+export default NotionGraph;

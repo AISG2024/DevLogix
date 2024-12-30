@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -18,7 +20,11 @@ public class NotionService {
     public void saveRecord(String id, String lastEditedTime, String name, String personName) {
         NotionEntity record = new NotionEntity();
         record.setPageId(id);
-        record.setLastEditedTime(lastEditedTime);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+        ZonedDateTime zonedDateTime = ZonedDateTime.parse(lastEditedTime, formatter).withZoneSameInstant(ZoneId.of("Asia/Seoul"));
+        record.setLastEditedTime(zonedDateTime.toLocalDateTime());
+
         record.setName(name);
 
         if (personName != null) {
@@ -44,6 +50,9 @@ public class NotionService {
     }
 
     public boolean recordExists(String id, String lastEditedTime) {
-        return notionRepository.existsByPageIdAndLastEditedTime(id, lastEditedTime);
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+        LocalDateTime lastEditedDateTime = LocalDateTime.parse(lastEditedTime, formatter);
+        
+        return notionRepository.existsByPageIdAndLastEditedTime(id, lastEditedDateTime);
     }
 }
