@@ -52,7 +52,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/register", "/api/login", "/api/logout", "/api/mattermost/webhook", "/api/mattermost/events").permitAll() 
+                .requestMatchers("/", "/api/register", "/api/login", "/api/logout", "/api/mattermost/webhook", "/api/mattermost/events", "/api/notion/webhook").permitAll() 
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) 
