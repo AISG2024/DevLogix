@@ -1,13 +1,25 @@
 package com.aisg.devlogix.controller;
 
+import com.aisg.devlogix.common.SSEClientManager;
 import com.aisg.devlogix.service.NotionService;
+import com.aisg.devlogix.util.JwtUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.http.HttpStatus;
+
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.List; 
 
 @RestController
 @RequestMapping("/api/notion")
@@ -18,12 +30,22 @@ public class NotionController {
     @Autowired
     private NotionService notionService;
 
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private SSEClientManager sseClientManager;
+
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(@RequestBody Map<String, Object> payload) {
         logger.info("Incoming Notion Webhook: " + payload);
 
         try {
             Map<String, Object> data = (Map<String, Object>) payload.get("data");
+            
             if (data == null || !data.containsKey("properties") || !data.containsKey("id") || !data.containsKey("last_edited_time")) {
                 return ResponseEntity.badRequest().body("Invalid payload: missing required fields.");
             }
@@ -65,10 +87,75 @@ public class NotionController {
 
             notionService.saveRecord(id, lastEditedTime, name, personNames);
 
-            return ResponseEntity.ok("Webhook processed successfully");
+            logger.info("Broadcasting SSE event to Notion clients...");
+            sseClientManager.getClients().forEach((key, emitter) -> {
+                if (key.endsWith(":notion")) {
+                    try {
+                        emitter.send(SseEmitter.event()
+                                .name("updateEvent")
+                                .data("New data received from Notion Webhook")
+                                .id("notion-" + id)
+                                .reconnectTime(1000));
+                        logger.info("Event sent to client: " + key);
+                    } catch (IOException e) {
+                        logger.warning("Failed to send event to client: " + key + ". Removing emitter.");
+                        sseClientManager.removeClient(key);
+                    }
+                }
+            });
+
+            logger.info(String.format("Processed Notion Webhook: id='%s', lastEditedTime='%s', name='%s', people='%s'", 
+                    id, lastEditedTime, name, personNames));
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Cache-Control", "no-cache");
+            headers.add("X-Accel-Buffering", "no");
+            headers.add("Connection", "keep-alive");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body("Webhook processed successfully");
         } catch (Exception e) {
             logger.severe("Error processing webhook: " + e.getMessage());
             return ResponseEntity.status(500).body("Error processing webhook");
         }
+    }
+
+    @GetMapping(value = "/events", produces = "text/event-stream")
+    public ResponseEntity<SseEmitter> streamEvents(
+            @RequestParam("token") String token,
+            @RequestParam("username") String username,
+            @RequestParam("serviceType") String serviceType) {
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        if (!jwtUtil.validateToken(token, userDetails)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+        }
+
+        String clientKey = username + ":" + serviceType;
+
+        if (sseClientManager.clientExists(clientKey)) {
+            sseClientManager.removeClient(clientKey);
+        }
+
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        sseClientManager.addClient(clientKey, emitter);
+
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("connect")
+                    .data("Connected to " + serviceType));
+        } catch (IOException e) {
+            sseClientManager.removeClient(clientKey);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Cache-Control", "no-cache");
+        headers.add("X-Accel-Buffering", "no");
+        headers.add("Connection", "keep-alive");
+        headers.add("Content-Type", "text/event-stream");
+
+        return new ResponseEntity<>(emitter, headers, HttpStatus.OK);
     }
 }

@@ -8,7 +8,7 @@ import "./Graph.css";
 const Graph = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
-  const { events, error: sseError } = useSSE("/mattermost/events");
+  const { events, error: sseError } = useSSE("/mattermost/events", "mattermost");
 
   const generateColors = (count) => {
     const colors = [];

@@ -1,7 +1,7 @@
 package com.aisg.devlogix.controller;
 
-import com.aisg.devlogix.service.CommitStatsService;
-import com.aisg.devlogix.dto.CommitStatsDTO;
+import com.aisg.devlogix.service.NotionStatsService;
+import com.aisg.devlogix.dto.NotionStatsDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,20 +13,20 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/commits")
-public class CommitStatsController {
+@RequestMapping("/api/notion")
+public class NotionStatsController {
 
     @Autowired
-    private CommitStatsService commitStatsService;
+    private NotionStatsService notionStatsService;
 
     @GetMapping("/getAll")
-    public List<CommitStatsDTO> getAllCommits() {
-        return commitStatsService.getAllCommits();
+    public List<NotionStatsDTO> getAllNotionData() {
+        return notionStatsService.getAllNotionData();
     }
 
     @GetMapping("/today")
-    public ResponseEntity<Map<String, Integer>> getTodayCommitStats() {
-        Map<String, Integer> stats = commitStatsService.getTodayCommitStats();
+    public ResponseEntity<Map<String, Integer>> getTodayNotionStats() {
+        Map<String, Integer> stats = notionStatsService.getTodayNotionStats();
         return ResponseEntity.ok(stats);
     }
 }

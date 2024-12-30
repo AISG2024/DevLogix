@@ -1,5 +1,6 @@
 package com.aisg.devlogix.controller;
 
+import com.aisg.devlogix.common.SSEClientManager;
 import com.aisg.devlogix.service.MattermostService;
 import com.aisg.devlogix.service.RateLimiterService;
 import com.aisg.devlogix.util.JwtUtil;
@@ -10,18 +11,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 @RestController
@@ -42,15 +39,15 @@ public class MattermostController {
     @Autowired
     private RateLimiterService rateLimiterService;
 
-
     @Autowired
     private JwtUtil jwtUtil;
 
-    private final Map<String, SseEmitter> clients = new ConcurrentHashMap<>();
+    @Autowired
+    private SSEClientManager sseClientManager;
 
     @PostMapping(value = "/webhook", consumes = "application/json")
     public ResponseEntity<String> handleJsonWebhook(@RequestBody Map<String, Object> payload) {
-        logger.info("Incoming Webhook: " + payload);
+        logger.info("Incoming Mattermost Webhook: " + payload);
 
         String token = (String) payload.get("token");
         String text = (String) payload.get("text");
@@ -64,81 +61,62 @@ public class MattermostController {
 
         mattermostService.saveParsedData(channelName, text);
 
-        logger.info("Broadcasting SSE event to clients...");
-        clients.forEach((key, emitter) -> {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("updateEvent")
-                        .data("New data received from Mattermost Webhook")
-                        .id("12345")
-                        .reconnectTime(1000));
-                logger.info("Event sent to client: " + key);
-            } catch (IOException e) {
-                logger.warning("Failed to send event to client: " + key + ". Removing emitter.");
-                emitter.complete();
-                clients.remove(key);
-            }
-        });
+        logger.info("Broadcasting SSE event to Mattermost clients...");
+        sseClientManager.broadcastEvent("updateEvent", "New data received from Mattermost Webhook", "mattermost-" + channelName, ":mattermost");
 
-        logger.info(String.format("Processed Webhook: message='%s', user='%s', channel='%s'", text, userName, channelName));
+        logger.info(String.format("Processed Mattermost Webhook: message='%s', user='%s', channel='%s'", text, userName, channelName));
 
         HttpHeaders headers = new HttpHeaders();
-
         headers.add("Cache-Control", "no-cache");
         headers.add("X-Accel-Buffering", "no");
         headers.add("Connection", "keep-alive");
 
         return ResponseEntity.ok()
-            .headers(headers)
-            .body("Webhook processed successfully");
+                .headers(headers)
+                .body("Webhook processed successfully");
     }
 
     @GetMapping(value = "/events", produces = "text/event-stream")
-    public ResponseEntity<SseEmitter> streamEvents(@RequestParam("token") String token, @RequestParam("username") String username) {
-        // if (!rateLimiterService.isRequestAllowed(username)) {
-        //     throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many requests. Please try again later.");
-        // }
-
+    public ResponseEntity<SseEmitter> streamEvents(
+            @RequestParam("token") String token,
+            @RequestParam("username") String username,
+            @RequestParam("serviceType") String serviceType) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
         if (!jwtUtil.validateToken(token, userDetails)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
         }
 
-        if (clients.containsKey(username)) {
-            logger.info("Existing connection found for username: " + username + ". Closing the old connection.");
-            try {
-                clients.get(username).complete();
-            } catch (Exception e) {
-                logger.warning("Error while closing the old connection for username: " + username);
-            }
-            clients.remove(username);
+        String clientKey = username + ":" + serviceType;
+
+        if (sseClientManager.clientExists(clientKey)) {
+            logger.info("Existing connection found for client: " + clientKey + ". Closing the old connection.");
+            sseClientManager.removeClient(clientKey);
         }
 
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        clients.put(username, emitter);
-        logger.info("New connection established for username: " + username);
+        sseClientManager.addClient(clientKey, emitter);
+
+        logger.info("New connection established for client: " + clientKey);
 
         emitter.onCompletion(() -> {
-            logger.info("Client disconnected: " + username);
-            clients.remove(username);
+            logger.info("Client disconnected: " + clientKey);
+            sseClientManager.removeClient(clientKey);
         });
 
         emitter.onTimeout(() -> {
-            logger.warning("Client connection timed out: " + username);
-            clients.remove(username);
+            logger.warning("Client connection timed out: " + clientKey);
+            sseClientManager.removeClient(clientKey);
         });
 
         try {
             emitter.send(SseEmitter.event()
                     .name("connect")
-                    .data("Connected to server"));
-                    
-            logger.info("Sent connection confirmation to client: " + username);
+                    .data("Connected to " + serviceType));
+            logger.info("Sent connection confirmation to client: " + clientKey);
         } catch (IOException e) {
-            logger.warning("Failed to send connection confirmation to client: " + username);
-            emitter.complete();
-            clients.remove(username);
+            logger.warning("Failed to send connection confirmation to client: " + clientKey);
+            sseClientManager.removeClient(clientKey);
         }
 
         HttpHeaders headers = new HttpHeaders();
