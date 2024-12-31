@@ -23,8 +23,11 @@ public class NotionEntity {
     private String name;
 
     @Column(nullable = true)
-    private String personName;
+    private String personNames;
 
     @Column(nullable = false)
     private String receivedAt;
+
+    @Column(nullable = false)
+    private String fieldNames;
 }

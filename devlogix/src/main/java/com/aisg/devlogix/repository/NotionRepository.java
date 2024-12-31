@@ -11,9 +11,9 @@ import java.util.List;
 public interface NotionRepository extends JpaRepository<NotionEntity, Long> {
     boolean existsByPageIdAndLastEditedTime(String pageId, LocalDateTime lastEditedTime);
 
-    @Query("SELECT n.personName, COUNT(n) FROM NotionEntity n " +
+    @Query("SELECT n.personNames, COUNT(n) FROM NotionEntity n " +
        "WHERE n.lastEditedTime BETWEEN :startOfDay AND :endOfDay " +
-       "GROUP BY n.personName")
+       "GROUP BY n.personNames")
     List<Object[]> findEntriesByPersonToday(@Param("startOfDay") LocalDateTime startOfDay,
                                         @Param("endOfDay") LocalDateTime endOfDay);
 }

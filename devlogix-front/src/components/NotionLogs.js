@@ -57,6 +57,7 @@ const NotionLogs = () => {
           <tr>
             <th>#</th>
             <th>Name</th>
+            <th>Field</th>
             <th>Person</th>
             <th>Page ID</th>
             <th>Received At</th>
@@ -81,7 +82,8 @@ const NotionLogs = () => {
               <tr key={`${log.pageId}-${index}`}>
                 <td>{index + 1}</td>
                 <td>{log.name}</td>
-                <td>{log.personName}</td>
+                <td>{log.fieldNames}</td>
+                <td>{log.personNames}</td>
                 <td>{log.pageId}</td>
                 <td>{new Date(log.receivedAt).toLocaleString()}</td>
                 <td>{new Date(log.lastEditedTime).toLocaleString()}</td>

@@ -30,10 +30,11 @@ public class NotionStatsService {
                 .map(entity -> new NotionStatsDTO(
                         entity.getId(),
                         entity.getName(),
-                        entity.getPersonName(),
+                        entity.getPersonNames(),
                         entity.getReceivedAt(),
                         entity.getLastEditedTime(),
-                        entity.getPageId()
+                        entity.getPageId(),
+                        entity.getFieldNames()
                 ))
                 .collect(Collectors.toList());
     }

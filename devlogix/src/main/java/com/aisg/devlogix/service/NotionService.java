@@ -17,7 +17,7 @@ public class NotionService {
     @Autowired
     private NotionRepository notionRepository;
 
-    public void saveRecord(String id, String lastEditedTime, String name, String personName) {
+    public void saveRecord(String id, String lastEditedTime, String name, String personNames, String fieldNames) {
         NotionEntity record = new NotionEntity();
         record.setPageId(id);
 
@@ -27,12 +27,16 @@ public class NotionService {
 
         record.setName(name);
 
-        if (personName != null) {
-            record.setPersonName(personName);
+        if (personNames != null) {
+            record.setPersonNames(personNames);
         }
 
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         record.setReceivedAt(timestamp);
+
+        if (fieldNames != null && !fieldNames.isEmpty()) {
+            record.setFieldNames(fieldNames);
+        }
 
         notionRepository.save(record);
     }
