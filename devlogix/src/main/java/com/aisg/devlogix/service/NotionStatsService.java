@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +42,11 @@ public class NotionStatsService {
     }
 
     public Map<String, Integer> getTodayNotionStats() {
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+        ZoneId seoulZone = ZoneId.of("Asia/Seoul");
+        ZonedDateTime nowInSeoul = ZonedDateTime.now(seoulZone);
+
+        LocalDateTime startOfDay = nowInSeoul.toLocalDate().atStartOfDay(seoulZone).toLocalDateTime();
+        LocalDateTime endOfDay = nowInSeoul.toLocalDate().atTime(LocalTime.MAX).atZone(seoulZone).toLocalDateTime();
 
         List<Object[]> results = notionRepository.findEntriesByPersonToday(startOfDay, endOfDay);
 
