@@ -56,7 +56,7 @@ const NotionGraph = () => {
       });
     } catch (err) {
       // console.error("Error fetching Notion data:", err);
-      // setError(err.message);
+      setError(err.message);
     }
   };
 

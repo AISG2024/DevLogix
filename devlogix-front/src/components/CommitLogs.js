@@ -18,7 +18,7 @@ const CommitLogs = () => {
         setLogs(sortedData);
       } catch (err) {
         // console.error("Error fetching commits:", err);
-        // setFetchError(err.message || "An error occurred while fetching commits.");
+        setFetchError(err.message || "An error occurred while fetching commits.");
       } finally {
         setLoading(false);
       }
