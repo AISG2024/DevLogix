@@ -85,7 +85,18 @@ public class NotionController {
                     .reduce((name1, name2) -> name1 + ", " + name2)
                     .orElse("");
 
-            notionService.saveRecord(id, lastEditedTime, name, personNames);
+            Map<String, Object> fieldProperty = (Map<String, Object>) properties.get("Field");
+            List<Map<String, Object>> multiSelectList = (List<Map<String, Object>>) fieldProperty.get("multi_select");
+            if (multiSelectList == null || multiSelectList.isEmpty()) {
+                return ResponseEntity.badRequest().body("Invalid payload: Field property is empty.");
+            }
+            String fieldNames = multiSelectList.stream()
+                    .map(field -> (String) field.get("name"))
+                    .filter(fieldName -> fieldName != null)
+                    .reduce((name1, name2) -> name1 + ", " + name2)
+                    .orElse("");
+
+            notionService.saveRecord(id, lastEditedTime, name, personNames, fieldNames);
 
             logger.info("Broadcasting SSE event to Notion clients...");
             sseClientManager.getClients().forEach((key, emitter) -> {

@@ -10,8 +10,9 @@ import java.time.LocalDateTime;
 public class NotionStatsDTO {
     private Long id;
     private String name;
-    private String personName;
+    private String personNames;
     private String receivedAt;
     private LocalDateTime lastEditedTime;
     private String pageId;
+    private String fieldNames;
 }
