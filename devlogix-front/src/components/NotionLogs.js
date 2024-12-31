@@ -18,7 +18,7 @@ const NotionLogs = () => {
         setLogs(sortedData);
       } catch (err) {
         // console.error("Error fetching Notion logs:", err);
-        // setFetchError(err.message || "An error occurred while fetching logs.");
+        setFetchError(err.message || "An error occurred while fetching logs.");
       } finally {
         setLoading(false);
       }
@@ -38,7 +38,7 @@ const NotionLogs = () => {
           setLogs(sortedData);
         } catch (err) {
           // console.error("Error fetching updated logs:", err);
-          // setFetchError(err.message || "An error occurred while fetching updated logs.");
+          setFetchError(err.message || "An error occurred while fetching updated logs.");
         }
       };
 
