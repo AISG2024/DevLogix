@@ -5,8 +5,8 @@ export const getAllCommits = async () => {
     const data = await authenticatedRequest("/commits/getAll", "GET");
     return data;
   } catch (error) {
-    console.error("Error fetching all commits:", error.message);
-    throw error;
+    // console.error("Error fetching all commits:", error.message);
+    // throw error;
   }
 };
 
@@ -15,7 +15,7 @@ export const getTodayCommits = async () => {
     const data = await authenticatedRequest("/commits/today", "GET");
     return data; 
   } catch (error) {
-    console.error("Error fetching today's commits:", error.message);
-    throw error; 
+    // console.error("Error fetching today's commits:", error.message);
+    // throw error; 
   }
 };

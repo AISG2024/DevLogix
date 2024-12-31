@@ -5,8 +5,8 @@ export const getAllNotion = async () => {
     const data = await authenticatedRequest("/notion/getAll", "GET");
     return data;
   } catch (error) {
-    console.error("Error fetching all commits:", error.message);
-    throw error;
+    // console.error("Error fetching all commits:", error.message);
+    // throw error;
   }
 };
 
@@ -15,7 +15,7 @@ export const getTodayNotion = async () => {
     const data = await authenticatedRequest("/notion/today", "GET");
     return data; 
   } catch (error) {
-    console.error("Error fetching today's commits:", error.message);
-    throw error; 
+    // console.error("Error fetching today's commits:", error.message);
+    // throw error; 
   }
 };
