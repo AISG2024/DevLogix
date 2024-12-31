@@ -55,8 +55,8 @@ const NotionGraph = () => {
         ],
       });
     } catch (err) {
-      console.error("Error fetching Notion data:", err);
-      setError(err.message);
+      // console.error("Error fetching Notion data:", err);
+      // setError(err.message);
     }
   };
 
@@ -66,7 +66,7 @@ const NotionGraph = () => {
 
   useEffect(() => {
     if (events.length > 0) {
-      console.log("SSE events received, updating data...");
+      // console.log("SSE events received, updating data...");
       fetchData();
     }
   }, [events]);
