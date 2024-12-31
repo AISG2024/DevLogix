@@ -45,8 +45,13 @@ public class NotionService {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
             LocalDateTime lastEditedDateTime = LocalDateTime.parse(lastEditedTime, formatter);
-            LocalDate today = LocalDate.now();
-            return lastEditedDateTime.toLocalDate().isEqual(today);
+            
+            ZonedDateTime utcDateTime = lastEditedDateTime.atZone(ZoneId.of("UTC"));
+            ZonedDateTime seoulDateTime = utcDateTime.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
+
+            LocalDate todayInSeoul = LocalDate.now(ZoneId.of("Asia/Seoul"));
+
+            return seoulDateTime.toLocalDate().isEqual(todayInSeoul);
         } catch (Exception e) {
             System.err.println("Error parsing last_edited_time: " + e.getMessage());
             return false;
